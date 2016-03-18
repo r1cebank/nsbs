@@ -7,6 +7,7 @@
 require('babel-core/register');
 
 const gulp         = require('gulp');
+const gutil        = require('gulp-util');
 
 const del          = require('del');
 const babel        = require('gulp-babel');
@@ -16,7 +17,9 @@ const notify       = require('gulp-notify');
 const isparta      = require('isparta');
 const changed      = require('gulp-changed');
 const istanbul     = require('gulp-istanbul');
+const jsinspect    = require('gulp-jsinspect');
 const sourcemaps   = require('gulp-sourcemaps');
+const codeclimate  = require('gulp-codeclimate-reporter');
 
 /*!
  * Load plugin configuration files.
@@ -24,6 +27,7 @@ const sourcemaps   = require('gulp-sourcemaps');
 const pkg          = require('./package.json');
 const eslintrc     = pkg.eslintConfig;
 const babelrc      = pkg.babel;
+const jsirc        = pkg.jsInspectConfig;
 
 /*!
  * Default build target.
@@ -35,7 +39,7 @@ gulp.task('default', [ 'test' ]);
  * Delete previous builds.
  */
 gulp.task('clean', function() {
-  return del([ 'lib/**' ]);
+    return del([ 'lib/**' ]);
 });
 
 
@@ -44,13 +48,13 @@ gulp.task('clean', function() {
  */
 const build = function() {
 
-  return gulp.src(['src/**/*.js'], { base: 'src' })
-    .pipe(changed('lib'))
-    .pipe(sourcemaps.init())
-    .pipe(babel(babelrc))
-    .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest('lib'))
-    .pipe(notify({ message: 'Build Successful', onLast: true }));
+    return gulp.src(['src/**/*.js'], { base: 'src' })
+        .pipe(changed('lib'))
+        .pipe(sourcemaps.init())
+        .pipe(babel(babelrc))
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest('lib'))
+        .pipe(notify({ message: 'Build Successful', onLast: true }));
 
 };
 gulp.task('build', ['lint'], build);
@@ -62,11 +66,12 @@ gulp.task('rebuild', [ 'relint' ], build);
  */
 const lint = function() {
 
-  return gulp.src(['src/**/*.js'])
-    .pipe(changed('lib'))
-    .pipe(eslint(eslintrc))
-    .pipe(eslint.format())
-    .pipe(eslint.failAfterError());
+    return gulp.src(['src/**/*.js'])
+        .pipe(changed('lib'))
+        .pipe(eslint(eslintrc))
+        .pipe(eslint.format())
+        .pipe(jsinspect(jsirc))
+        .pipe(eslint.failAfterError());
 
 };
 gulp.task('lint', lint);
@@ -74,13 +79,13 @@ gulp.task('relint', ['clean'], lint);
 
 
 /*!
- * Run the test suite.
+ * Run the test suit.
  */
-gulp.task('test', ['build'], function() {
+gulp.task('test', ['build'], function(done) {
 
-  gulp.src([ 'test/index.spec.js' ], { read: false })
-    .pipe(mocha({ reporter: 'spec' }))
-    .once('end', () => process.exit());
+    gulp.src([ 'test/index.spec.js' ], { read: false })
+        .pipe(mocha({ reporter: 'spec' }))
+        .once('end', done);
 
 });
 
@@ -90,22 +95,40 @@ gulp.task('test', ['build'], function() {
  */
 gulp.task('coverage', ['build'], function(done) {
 
-  gulp.src(['lib/**/*.js'])
-    .pipe(istanbul({
-      instrumenter: isparta.Instrumenter,
-      includeUntested: true
-    }))
-    .pipe(istanbul.hookRequire())
-    .on('finish', function() {
-      gulp.src(['test/index.spec.js'])
-        .pipe(mocha())
-        .pipe(istanbul.writeReports({
-          dir: 'coverage',
-          reportOpts: { dir: 'coverage' },
-          reporters: ['text-summary', 'html', 'lcov']
+    gulp.src(['src/**/*.js'])
+        .pipe(istanbul({
+            instrumenter: isparta.Instrumenter,
+            includeUntested: true
         }))
-        .once('end', () => process.exit());
-    });
+        .pipe(istanbul.hookRequire())
+        .on('finish', function() {
+            gulp.src(['test/index.spec.js'])
+                .pipe(mocha())
+                .pipe(istanbul.writeReports({
+                    dir: 'coverage',
+                    reportOpts: { dir: 'coverage' },
+                    reporters: ['text-summary', 'html', 'lcov']
+                }))
+                .once('end', done);
+        });
+
+});
+
+
+/*!
+ * Report test coverage to CodeClimate.
+ */
+gulp.task('coverage:report', [ 'coverage' ], function() {
+
+    const token = process.env.CODECLIMATE_REPO_TOKEN;
+    if (!token) {
+        gutil.log('Skipping CodeClimate coverage reporting.');
+        return null;
+    }
+
+    return gulp
+        .src([ 'coverage/lcov.info' ], { read: false })
+        .pipe(codeclimate({ token: token }));
 
 });
 
@@ -114,5 +137,5 @@ gulp.task('coverage', ['build'], function(done) {
  * Automatically rebuild on save.
  */
 gulp.task('watch', ['rebuild'], function() {
-  gulp.watch('src/**/*.js', ['build']);
+    gulp.watch('src/**/*.js', ['build']);
 });

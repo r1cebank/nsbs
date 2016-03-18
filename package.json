@@ -81,6 +81,10 @@
   "flowConfig": {
     "all": true
   },
+  "jsInspectConfig": {
+    "threshold": 25,
+    "suppress": 0
+  },
   "eslintConfig": {
     "root": true,
     "extends": "airbnb/base",
