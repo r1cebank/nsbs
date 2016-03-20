@@ -27,11 +27,21 @@ it('Should correctly delete the bucket', function(done) {
         databasePath: testoutput
     });
     Database.newBucket('testBucket-3').then(() => {
-        Database.removeBucket('testBucket-3').should.be.fulfilled.then(() => {
+        Database.removeBucket('testBucket-3').should.be.fulfilled.then((result) => {
+            expect(result).to.equal(1);
             Database.databaseIndex.findOne({name: 'testBucket-3'}, function(findError, existingDocument) {
                 expect(existingDocument).to.be.null;
                 done();
             });
         });
     });
+});
+
+it('Should not delete the bucket if not exist', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    Database.removeBucket('testBucket-4').should.be.fulfilled.then((result) => {
+        expect(result).to.equal(0);
+    }).should.notify(done);
 });

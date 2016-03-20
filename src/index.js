@@ -34,7 +34,7 @@ class nsbs {
      *  3. Add item to Bucket
      *  4. Remove item to Bucket
      *  5. Update item in Bucket
-     *  6. Remove Bucket
+     *  6. Remove Bucket ✓
      *  7. Get item from Bucket
      */
     newBucket(name) {
@@ -69,15 +69,11 @@ class nsbs {
     removeBucket(name) {
         Debug('Removing bucket called: ' + name);
         const bucketPath = Path.resolve(this.databasePath, `./${name}`);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.databaseIndex.remove({name}, (error, result) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    fs.remove(bucketPath, function() {
-                        resolve(result);
-                    });
-                }
+                fs.remove(bucketPath, function() {
+                    resolve(result);
+                });
             });
         });
     }
