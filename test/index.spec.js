@@ -38,3 +38,22 @@ describe('Utils', function() {
         });
     });
 });
+
+describe('Bucket Operations', function() {
+    //  Setting a test output directory
+    before(function() {
+        const mkdir = require('mkdirp');
+        global.testoutput = Root.resolve('../testoutput');
+        mkdir(global.testoutput);
+    });
+
+    require('./bucket.spec.js');
+
+    //    Remove the directory once test is done
+    after(function(done) {
+        const fs = require('fs-extra');
+        fs.remove(global.testoutput, function() {
+            done();
+        });
+    });
+});
