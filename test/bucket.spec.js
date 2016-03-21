@@ -8,8 +8,8 @@ it('Should create a bucket when it doesn\'t exist', function(done) {
     const Database = new nsbs({
         databasePath: testoutput
     });
-    Database.newBucket('testBucket').should.be.fulfilled.then((result) => {
-        expect(result).to.have.property('name', 'testBucket');
+    Database.newBucket('testBucket-1').should.be.fulfilled.then((result) => {
+        expect(result).to.have.property('name', 'testBucket-1');
     }).should.notify(done);
 });
 
@@ -44,4 +44,52 @@ it('Should not delete the bucket if not exist', function(done) {
     Database.removeBucket('testBucket-4').should.be.fulfilled.then((result) => {
         expect(result).to.equal(0);
     }).should.notify(done);
+});
+
+it('Should find bucket if exists', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    Database.newBucket('testBucket-5').then(() => {
+        Database.existBucket('testBucket-5').should.be.fulfilled.then((result) => {
+            expect(result).to.equal(true);
+        }).should.notify(done);
+    });
+});
+
+it('Should not find bucket if doesn\'t exists', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    Database.existBucket('testBucket-6').should.be.fulfilled.then((result) => {
+        expect(result).to.equal(false);
+    }).should.notify(done);
+});
+
+it('Should not insert item if bucket doesn\'t exists', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    Database.addItem('testBucket-7', 'files', {}).should.be.rejectedWith(Error, 'testBucket-7 does not exist.').and.notify(done);
+});
+
+it('Should fail when number of supplied argument is incorrect', function() {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    expect(Database.addItem.bind(Database /* No Argument supplied */)).to.throw(Error, 'Function should be called with 3 arguments.');
+});
+
+it('Should insert item if bucket exists', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    const document = {
+        name: 'test.png'
+    };
+    Database.newBucket('testBucket-8').then(() => {
+        Database.addItem('testBucket-8', 'files', document).should.be.fulfilled.then((result) => {
+            expect(result[0]).to.equal(document);
+        }).should.notify(done);
+    });
 });

@@ -21,15 +21,13 @@ class nsbs {
 
         //  Initialize the database file
         this.rootDB = new Engine.Db(this.databasePath, {});
-        //  Initialize the buckets object
-        this.buckets = [];
         //  Initialize the index file
         this.databaseIndex = this.rootDB.collection('index');
         Debug('new databases stored in: ' + this.databasePath);
     }
     /*
      *  Methods needed
-     *  1. Check if bucket exist
+     *  1. Check if bucket exist ✓
      *  2. New Bucket ✓
      *  3. Add item to Bucket
      *  4. Remove item to Bucket
@@ -37,7 +35,39 @@ class nsbs {
      *  6. Remove Bucket ✓
      *  7. Get item from Bucket
      */
+    addItem(bucket, collection, item) {
+        Debug('Adding to: ' + bucket, '/' + collection);
+        const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
+        if (arguments.length < 3) {
+            throw new Error('Function should be called with 3 arguments.');
+        }
+        return new Promise((resolve, reject) => {
+            this.existBucket(bucket).then((result) => {
+                if (result) {
+                    const root = new Engine.Db(bucketPath, {});
+                    const collectionRoot = root.collection(collection);
+                    collectionRoot.insert(item, (insertError, insertedDocument) => {
+                        resolve(insertedDocument);
+                    });
+                } else {
+                    reject(new Error(`${bucket} does not exist.`));
+                }
+            });
+        });
+    }
+    existBucket(name) {
+        return new Promise((resolve) => {
+            this.databaseIndex.findOne({name}, (findError, existingBucket) => {
+                if (existingBucket) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
+    }
     newBucket(name) {
+        const bucketPath = Path.resolve(this.databasePath, `./${name}`);
         Debug('creating a new bucket with name: ' + name);
         return new Promise((resolve, reject) => {
             this.databaseIndex.findOne({name}, (findError, existingDocument) => {
@@ -52,14 +82,12 @@ class nsbs {
                     this.databaseIndex.insert(data, (insertError, insertedDocument) => {
                         // if (insertError) reject(insertError); // This really was not going to be set
                         //  Create the folder once bucket is inserted
-                        const bucketPath = Path.resolve(this.databasePath, `./${name}`);
                         Mkdir(bucketPath);
                         const bucket = {
                             name: name,
                             path: bucketPath,
                             root: new Engine.Db(bucketPath, {})
                         };
-                        this.buckets.push(bucket);
                         resolve(bucket, insertedDocument);
                     });
                 }
