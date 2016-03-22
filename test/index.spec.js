@@ -20,40 +20,35 @@ global.dofile      = Root.require;
 global.expect      = Chai.expect;
 global.Sinon       = require('sinon');
 
+function setup() {
+    const mkdir = require('mkdirp');
+    global.testoutput = Root.resolve('../testoutput');
+    mkdir(global.testoutput);
+}
+
+function cleanup(done) {
+    const fs = require('fs-extra');
+    fs.remove(global.testoutput, function() {
+        done();
+    });
+}
+
 describe('Utils', function() {
     //  Setting a test output directory
-    before(function() {
-        const mkdir = require('mkdirp');
-        global.testoutput = Root.resolve('../testoutput');
-        mkdir(global.testoutput);
-    });
+    before(setup);
 
     require('./util.spec.js');
 
     //    Remove the directory once test is done
-    after(function(done) {
-        const fs = require('fs-extra');
-        fs.remove(global.testoutput, function() {
-            done();
-        });
-    });
+    after(cleanup);
 });
 
 describe('Bucket Operations', function() {
     //  Setting a test output directory
-    before(function() {
-        const mkdir = require('mkdirp');
-        global.testoutput = Root.resolve('../testoutput');
-        mkdir(global.testoutput);
-    });
+    before(setup);
 
     require('./bucket.spec.js');
 
     //    Remove the directory once test is done
-    after(function(done) {
-        const fs = require('fs-extra');
-        fs.remove(global.testoutput, function() {
-            done();
-        });
-    });
+    after(cleanup);
 });

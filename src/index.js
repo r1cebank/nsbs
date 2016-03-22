@@ -29,25 +29,44 @@ class nsbs {
      *  Methods needed
      *  1. Check if bucket exist ✓
      *  2. New Bucket ✓
-     *  3. Add item to Bucket
+     *  3. Add item to Bucket ✓
      *  4. Remove item to Bucket
      *  5. Update item in Bucket
      *  6. Remove Bucket ✓
      *  7. Get item from Bucket
+     *  8. List Bucket
      */
+    listBucket(bucket) {
+        Debug('Listing: ' + bucket);
+        const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
+        const root = new Engine.Db(bucketPath, {});
+        const indexCollection = root.collection('_index');
+        return new Promise((resolve) => {
+            indexCollection.find().toArray(function(err, collections) {
+                resolve(collections);
+            });
+        });
+    }
     addItem(bucket, collection, item) {
-        Debug('Adding to: ' + bucket, '/' + collection);
+        Debug('Adding to: ' + bucket + '/' + collection);
         const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
         if (arguments.length < 3) {
             throw new Error('Function should be called with 3 arguments.');
+        }
+        if (collection === '_index') {
+            throw new Error('Collection can not be named _index.');
         }
         return new Promise((resolve, reject) => {
             this.existBucket(bucket).then((result) => {
                 if (result) {
                     const root = new Engine.Db(bucketPath, {});
                     const collectionRoot = root.collection(collection);
-                    collectionRoot.insert(item, (insertError, insertedDocument) => {
-                        resolve(insertedDocument);
+                    const indexCollection = root.collection('_index');
+                     // Update the index collection
+                    indexCollection.update({name: collection}, {name: collection}, {upsert: true}, function() {
+                        collectionRoot.insert(item, (insertError, insertedDocument) => {
+                            resolve(insertedDocument);
+                        });
                     });
                 } else {
                     reject(new Error(`${bucket} does not exist.`));

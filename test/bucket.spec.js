@@ -80,6 +80,13 @@ it('Should fail when number of supplied argument is incorrect', function() {
     expect(Database.addItem.bind(Database /* No Argument supplied */)).to.throw(Error, 'Function should be called with 3 arguments.');
 });
 
+it('Should fail supplied _index as collection', function() {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    expect(Database.addItem.bind(Database, 'testbucket-8', '_index', {})).to.throw(Error, 'Collection can not be named _index.');
+});
+
 it('Should insert item if bucket exists', function(done) {
     const Database = new nsbs({
         databasePath: testoutput
@@ -87,9 +94,25 @@ it('Should insert item if bucket exists', function(done) {
     const document = {
         name: 'test.png'
     };
-    Database.newBucket('testBucket-8').then(() => {
-        Database.addItem('testBucket-8', 'files', document).should.be.fulfilled.then((result) => {
+    Database.newBucket('testBucket-9').then(() => {
+        Database.addItem('testBucket-9', 'files', document).should.be.fulfilled.then((result) => {
             expect(result[0]).to.equal(document);
         }).should.notify(done);
+    });
+});
+
+it('Should return list of collections', function(done) {
+    const Database = new nsbs({
+        databasePath: testoutput
+    });
+    const document = {
+        name: 'test.png'
+    };
+    Database.newBucket('testBucket-10').then(() => {
+        Database.addItem('testBucket-10', 'files', document).should.be.fulfilled.then(() => {
+            Database.listBucket('testBucket-10').should.be.fulfilled.then((result) => {
+                expect(result[0]).to.have.property('name', 'files');
+            }).should.notify(done);
+        });
     });
 });
