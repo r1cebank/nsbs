@@ -86,7 +86,7 @@
     "all": true
   },
   "jsInspectConfig": {
-    "threshold": 25,
+    "threshold": 100,
     "suppress": 0
   },
   "eslintConfig": {

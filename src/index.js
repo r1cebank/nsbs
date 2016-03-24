@@ -33,10 +33,46 @@ class nsbs {
      *  4. Remove item to Bucket
      *  5. Update item in Bucket
      *  6. Remove Bucket ✓
-     *  7. Get item from Bucket
+     *  7. Get item from Bucket ✓
      *  8. List Bucket
+     *  9. List collections ✓
+     *  10. List items
      */
-    listBucket(bucket) {
+    listItems(bucket, collection) {
+        Debug('Listing: ' + bucket + '/' + collection);
+        const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
+        return new Promise((resolve, reject) => {
+            this.existBucket(bucket).then((result) => {
+                if (result) {
+                    const root = new Engine.Db(bucketPath, {});
+                    const collectionRoot = root.collection(collection);
+                    collectionRoot.find().toArray((error, documents) => {
+                        resolve(documents);
+                    });
+                } else {
+                    reject(new Error(`${bucket} does not exist.`));
+                }
+            });
+        });
+    }
+    getItem(bucket, collection, query) {
+        Debug('Searching from: ' + bucket + '/' + collection);
+        const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
+        return new Promise((resolve, reject) => {
+            this.existBucket(bucket).then((result) => {
+                if (result) {
+                    const root = new Engine.Db(bucketPath, {});
+                    const collectionRoot = root.collection(collection);
+                    collectionRoot.findOne(query, (error, document) => {
+                        resolve(document);
+                    });
+                } else {
+                    reject(new Error(`${bucket} does not exist.`));
+                }
+            });
+        });
+    }
+    listCollection(bucket) {
         Debug('Listing: ' + bucket);
         const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
         const root = new Engine.Db(bucketPath, {});
