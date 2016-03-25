@@ -199,3 +199,58 @@ describe('List items', function() {
         });
     });
 });
+
+describe('List Buckets', function() {
+    it('Should list all buckets in database index', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        Database.listBuckets().should.be.fulfilled.then((buckets) => {
+            expect(buckets.length).to.deep.equal(9);
+        }).should.notify(done);
+    });
+});
+
+describe('Update Item', function() {
+    it('Should update item if bucket and item exist', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        const document = {
+            name: 'test.png'
+        };
+        const newDocument = {
+            name: 'newTest.png'
+        };
+        Database.newBucket('testBucket-17').then(() => {
+            Database.addItem('testBucket-17', 'files', document).then(() => {
+                Database.updateItem('testBucket-17', 'files', document, newDocument).then(() => {
+                    Database.listItems('testBucket-17', 'files').should.be.fulfilled.then((documents) => {
+                        expect(documents).to.deep.equal([newDocument]);
+                    }).should.notify(done);
+                });
+            });
+        });
+    });
+    it('Should upsert item if item does not exist', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        const document = {
+            name: 'test.png'
+        };
+        Database.newBucket('testBucket-18').then(() => {
+            Database.updateItem('testBucket-18', 'files', document, document).then(() => {
+                Database.listItems('testBucket-18', 'files').should.be.fulfilled.then((documents) => {
+                    expect(documents[0].name).to.equal(document.name);
+                }).should.notify(done);
+            });
+        });
+    });
+    it('Should fail if bucket does not exist', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        Database.updateItem('testBucket-19', 'files', {}, {}).should.be.rejectedWith(Error, 'testBucket-19 does not exist.').and.notify(done);
+    });
+});
