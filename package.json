@@ -1,6 +1,6 @@
 {
   "name": "nsbs",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "description": "Node SQLite bucket storage",
   "main": "lib/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "files": [
     "lib"
   ],
-  "author": "",
+  "author": "Siyuan Gao <siyuangao@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/r1cebank/nsbs/issues"
