@@ -30,14 +30,31 @@ class nsbs {
      *  1. Check if bucket exist ✓
      *  2. New Bucket ✓
      *  3. Add item to Bucket ✓
-     *  4. Remove item from Bucket
-     *  5. Update item in Bucket
+     *  4. Remove item from Bucket ✓
+     *  5. Update item in Bucket ✓
      *  6. Remove Bucket ✓
      *  7. Get item from Bucket ✓
      *  8. List Bucket ✓
      *  9. List collections ✓
      *  10. List items ✓
      */
+    deleteItem(bucket, collection, query) {
+        Debug('Deleting item in: ' + bucket + '/' + collection);
+        const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);
+        return new Promise((resolve, reject) => {
+            this.existBucket(bucket).then((result) => {
+                if (result) {
+                    const root = new Engine.Db(bucketPath, {});
+                    const collectionRoot = root.collection(collection);
+                    collectionRoot.remove(query, (error, deletedItem) => {
+                        resolve(deletedItem);
+                    });
+                } else {
+                    reject(new Error(`${bucket} does not exist.`));
+                }
+            });
+        });
+    }
     updateItem(bucket, collection, query, newItem) {
         Debug('Updating item in: ' + bucket + '/' + collection);
         const bucketPath = Path.resolve(this.databasePath, `./${bucket}`);

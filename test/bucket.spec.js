@@ -22,7 +22,9 @@ describe('Bucket new', function() {
             Database.newBucket('testBucket-2').should.be.rejectedWith(Error, 'Bucket already exists!').and.notify(done);
         });
     });
+});
 
+describe('Bucket remove', function() {
     it('Should correctly delete the bucket', function(done) {
         const Database = new nsbs({
             databasePath: testoutput
@@ -30,16 +32,12 @@ describe('Bucket new', function() {
         Database.newBucket('testBucket-3').then(() => {
             Database.removeBucket('testBucket-3').should.be.fulfilled.then((result) => {
                 expect(result).to.equal(1);
-                Database.databaseIndex.findOne({name: 'testBucket-3'}, function(findError, existingDocument) {
-                    expect(existingDocument).to.be.null;
-                    done();
-                });
+                Database.listBuckets().should.be.fulfilled.then((result) => {
+                    expect(result.length).to.equal(2);
+                }).should.notify(done);
             });
         });
     });
-});
-
-describe('Bucket remove', function() {
     it('Should not delete the bucket if not exist', function(done) {
         const Database = new nsbs({
             databasePath: testoutput
@@ -109,7 +107,7 @@ describe('Add item', function() {
     });
 });
 
-describe('Bucket list', function() {
+describe('List collections', function() {
     it('Should return list of collections', function(done) {
         const Database = new nsbs({
             databasePath: testoutput
@@ -122,6 +120,23 @@ describe('Bucket list', function() {
                 Database.listCollection('testBucket-10').should.be.fulfilled.then((result) => {
                     expect(result[0]).to.have.property('name', 'files');
                 }).should.notify(done);
+            });
+        });
+    });
+    it('Should return list of collections (multiple)', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        const document = {
+            name: 'test.png'
+        };
+        Database.newBucket('testBucket-10-2').then(() => {
+            Database.addItem('testBucket-10-2', 'files', document).should.be.fulfilled.then(() => {
+                Database.addItem('testBucket-10-2', 'files-2', document).should.be.fulfilled.then(() => {
+                    Database.listCollection('testBucket-10-2').should.be.fulfilled.then((result) => {
+                        expect(result.length).to.equal(2);
+                    }).should.notify(done);
+                });
             });
         });
     });
@@ -206,7 +221,7 @@ describe('List Buckets', function() {
             databasePath: testoutput
         });
         Database.listBuckets().should.be.fulfilled.then((buckets) => {
-            expect(buckets.length).to.deep.equal(9);
+            expect(buckets.length).to.deep.equal(10);
         }).should.notify(done);
     });
 });
@@ -252,5 +267,48 @@ describe('Update Item', function() {
             databasePath: testoutput
         });
         Database.updateItem('testBucket-19', 'files', {}, {}).should.be.rejectedWith(Error, 'testBucket-19 does not exist.').and.notify(done);
+    });
+});
+
+describe('Delete item', function() {
+    it('Should correctly delete the item', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        const document = {
+            name: 'test.png'
+        };
+        Database.newBucket('testBucket-20').then(() => {
+            Database.addItem('testBucket-20', 'files', document).then(() => {
+                Database.deleteItem('testBucket-20', 'files', document).then((result) => {
+                    expect(result).to.equal(1);
+                    Database.listItems('testBucket-20', 'files').should.be.fulfilled.then((documents) => {
+                        expect(documents).to.deep.equal([]);
+                    }).should.notify(done);
+                });
+            });
+        });
+    });
+    it('Should not delete the item if does not exist', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        const document = {
+            name: 'test.png'
+        };
+        Database.newBucket('testBucket-21').then(() => {
+            Database.deleteItem('testBucket-21', 'files', document).then((result) => {
+                expect(result).to.equal(0);
+                Database.listItems('testBucket-21', 'files').should.be.fulfilled.then((documents) => {
+                    expect(documents).to.deep.equal([]);
+                }).should.notify(done);
+            });
+        });
+    });
+    it('Should reject if bucket does not exist', function(done) {
+        const Database = new nsbs({
+            databasePath: testoutput
+        });
+        Database.deleteItem('testBucket-22', 'files', {}).should.be.rejectedWith(Error, 'testBucket-22 does not exist.').and.notify(done);
     });
 });
