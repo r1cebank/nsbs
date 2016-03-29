@@ -37,6 +37,7 @@ class nsbs {
      *  8. List Bucket ✓
      *  9. List collections ✓
      *  10. List items ✓
+     *  11. List all item in a bucket
      */
     deleteItem(bucket, collection, query) {
         Debug('Deleting item in: ' + bucket + '/' + collection);
