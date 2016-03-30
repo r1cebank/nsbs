@@ -2,6 +2,8 @@
 [![Code Climate](https://codeclimate.com/github/r1cebank/nsbs/badges/gpa.svg)](https://codeclimate.com/github/r1cebank/nsbs)
 [![Test Coverage](https://codeclimate.com/github/r1cebank/nsbs/badges/coverage.svg)](https://codeclimate.com/github/r1cebank/nsbs/coverage)
 [![Circle CI](https://circleci.com/gh/r1cebank/nsbs.svg?style=svg)](https://circleci.com/gh/r1cebank/nsbs)
+[![Dependencies] (https://david-dm.org/r1cebank/nsbs.svg)](https://david-dm.org/r1cebank/nsbs.svg)
+[![Inline docs](http://inch-ci.org/github/r1cebank/nsbs.svg?branch=master)](http://inch-ci.org/github/r1cebank/nsbs)
 
 Node bucket-like storage
 
